@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
+import csv
 
 @dataclass
 class Song:
@@ -52,7 +53,58 @@ def load_songs(csv_path: str) -> List[Dict]:
     """
     # TODO: Implement CSV loading logic
     print(f"Loading songs from {csv_path}...")
-    return []
+    songs = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            songs.append({
+                "id":           int(row["id"]),
+                "title":        row["title"],
+                "artist":       row["artist"],
+                "genre":        row["genre"],
+                "mood":         row["mood"],
+                "energy":       float(row["energy"]),
+                "tempo_bpm":    float(row["tempo_bpm"]),
+                "valence":      float(row["valence"]),
+                "danceability": float(row["danceability"]),
+                "acousticness": float(row["acousticness"]),
+            })
+    return songs
+
+def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, str]:
+    """
+    Scores a single song against user preferences and returns a score and explanation.
+    Required by src/main.py
+    """
+    score = 0.0
+    reasons = []
+
+    # Genre match: +2.0 points
+    if song["genre"] == user_prefs.get("favorite_genre"):
+        score += 2.0
+        reasons.append("genre match (+2.0)")
+
+    # Mood match: +1.0 points
+    if song["mood"] == user_prefs.get("favorite_mood"):
+        score += 1.0
+        reasons.append("mood match (+1.0)")
+
+    # Energy proximity: (1.0 - |song_energy - target_energy|) x 1.5
+    energy_score = round((1.0 - abs(song["energy"] - user_prefs.get("target_energy", 0.5))) * 1.5, 2)
+    score += energy_score
+    reasons.append(f"energy proximity (+{energy_score})")
+
+    # Valence proximity: (1.0 - |song_valence - target_valence|) x 1.0
+    valence_score = round((1.0 - abs(song["valence"] - user_prefs.get("target_valence", 0.5))) * 1.0, 2)
+    score += valence_score
+    reasons.append(f"valence proximity (+{valence_score})")
+
+    # Danceability proximity: (1.0 - |song_danceability - target_danceability|) x 1.0
+    dance_score = round((1.0 - abs(song["danceability"] - user_prefs.get("target_danceability", 0.5))) * 1.0, 2)
+    score += dance_score
+    reasons.append(f"danceability proximity (+{dance_score})")
+
+    return round(score, 2), ", ".join(reasons)
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
@@ -61,4 +113,9 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
     """
     # TODO: Implement scoring and ranking logic
     # Expected return format: (song_dict, score, explanation)
-    return []
+    # scored is a list of tuples: (song, score, explanation)
+    scored = [(song, *score_song(user_prefs, song)) for song in songs]
+
+    # sorted() is used here instead of .sort() because it returns a new list
+    # without modifying the original songs list, which is safer and more Pythonic
+    return sorted(scored, key=lambda x: x[1], reverse=True)[:k]
