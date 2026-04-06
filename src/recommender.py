@@ -118,4 +118,34 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
 
     # sorted() is used here instead of .sort() because it returns a new list
     # without modifying the original songs list, which is safer and more Pythonic
-    return sorted(scored, key=lambda x: x[1], reverse=True)[:k]
+    scored = sorted(scored, key=lambda x: x[1], reverse=True)
+
+    # Diversity penalty: prevent too many songs from the same artist or genre
+    # in the top results. If an artist or genre is already in the results,
+    # apply a 0.5 point penalty to the score of the next song from that artist/genre.
+    seen_artists = {}
+    seen_genres = {}
+    results = []
+
+    for song, score, explanation in scored:
+        artist = song["artist"]
+        genre = song["genre"]
+        penalty = 0.0
+        penalty_notes = []
+
+        if seen_artists.get(artist, 0) >= 1:
+            penalty += 0.5
+            penalty_notes.append("artist repeat (-0.5)")
+        if seen_genres.get(genre, 0) >= 2:
+            penalty += 0.5
+            penalty_notes.append("genre repeat (-0.5)")
+
+        if penalty > 0:
+            score = round(score - penalty, 2)
+            explanation += ", " + ", ".join(penalty_notes)
+
+        seen_artists[artist] = seen_artists.get(artist, 0) + 1
+        seen_genres[genre] = seen_genres.get(genre, 0) + 1
+        results.append((song, score, explanation))
+
+    return sorted(results, key=lambda x: x[1], reverse=True)[:k]
