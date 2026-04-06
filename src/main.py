@@ -31,9 +31,9 @@ def main() -> None:
             "name": "Chill Lofi Listener",
             "favorite_genre": "lofi",
             "favorite_mood": "chill",
-            "target_energy": 0.35,
-            "target_valence": 0.55,
-            "target_danceability": 0.55,
+            "target_energy": 0.40,
+            "target_valence": 0.58,
+            "target_danceability": 0.60,
             "likes_acoustic": True
         },
         {
@@ -59,7 +59,10 @@ def main() -> None:
             print(f"{i}. {song['title']} by {song['artist']}")
             print(f"   Score:   {score:.2f}")
             print(f"   Reasons: {explanation}")
+            if "artist repeat" in explanation or "genre repeat" in explanation:
+                print(f"   ⚠ Diversity penalty applied for repeated artist or genre.")
             print("-" * 50)
+        print()
 
 
 if __name__ == "__main__":
