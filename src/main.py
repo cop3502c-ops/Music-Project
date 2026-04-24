@@ -20,6 +20,7 @@ def main() -> None:
     profiles = [
         {
             "name": "Happy Pop Fan",
+            "mode": "genre_first",
             "favorite_genre": "pop",
             "favorite_mood": "happy",
             "target_energy": 0.80,
@@ -29,6 +30,7 @@ def main() -> None:
         },
         {
             "name": "Chill Lofi Listener",
+            "mode": "mood_first",
             "favorite_genre": "lofi",
             "favorite_mood": "chill",
             "target_energy": 0.40,
@@ -38,6 +40,7 @@ def main() -> None:
         },
         {
             "name": "High-Energy EDM Fan",
+            "mode": "energy_focused",
             "favorite_genre": "edm",
             "favorite_mood": "euphoric",
             "target_energy": 0.95,
@@ -49,9 +52,9 @@ def main() -> None:
 
     for user_prefs in profiles:
         print(f"\n{'=' * 50}")
-        print(f"Profile: {user_prefs['name']}")
+        print(f"Profile: {user_prefs['name']} | Mode: {user_prefs.get('mode', 'balanced').upper()}")
         print(f"{'=' * 50}")
-        recommendations = recommend_songs(user_prefs, songs, k=5)
+        recommendations = recommend_songs(user_prefs, songs, k=5, mode=user_prefs.get("mode", "balanced"))
         for i, rec in enumerate(recommendations, 1):
             # You decide the structure of each returned item.
             # A common pattern is: (song, score, explanation)
